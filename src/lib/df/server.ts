@@ -1,4 +1,4 @@
-// Server-only helpers for the GiftOps API routes.
+// Server-only helpers for the DealerFlow API routes.
 // Every /api/df/* route calls guard() first: it authenticates the Supabase
 // session, finds the staff member and their COMPANY (org), checks the role, and hands
 // back a service-role client that is SCOPED to that company: every read, update and delete

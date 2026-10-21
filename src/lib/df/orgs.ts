@@ -40,7 +40,7 @@ export async function createOrg(raw: Raw, a: NewOrg): Promise<{ ok: true; org: a
   }
   const status = a.status || 'trial'
   const { data: org, error } = await raw.from('df_orgs').insert({
-    name, slug, status, plan: a.plan ?? null, owner_email: a.ownerEmail || null, lead_api_key: newKey(),
+    name, slug, status, plan: a.plan ?? null, owner_email: a.ownerEmail || null,
     trial_ends_at: status === 'trial' ? new Date(Date.now() + (a.trialDays ?? 14) * 864e5).toISOString() : null,
   }).select().single()
   if (error || !org) return { ok: false, error: error?.message || 'Could not create the company.' }

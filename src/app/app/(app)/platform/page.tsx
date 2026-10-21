@@ -89,7 +89,7 @@ function Demos() {
 export default function PlatformPage() {
   const [tab, setTab] = useState<Tab>('overview')
   return <div>
-    <PageHeader title="Platform" subtitle="All companies and logins on GiftOps. Visible only to Evynta platform owners." />
+    <PageHeader title="Platform" subtitle="All companies and logins on DealerFlow AI. Visible only to Evynta platform owners." />
     <Tabs tabs={[{ id: 'overview', label: 'Overview' }, { id: 'companies', label: 'Companies' }, { id: 'users', label: 'Logins' }, { id: 'demos', label: 'Demo requests' }]} value={tab} onChange={setTab} />
     {tab === 'overview' ? <Overview /> : tab === 'companies' ? <Companies /> : tab === 'users' ? <Users /> : <Demos />}
   </div>
