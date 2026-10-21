@@ -39,19 +39,27 @@ export function qs(params: Record<string, any>): string {
   return s ? `?${s}` : ''
 }
 
+// Pages show the last result instantly while a fresh copy loads in the background.
+const FETCH_CACHE = new Map<string, any>()
+
+export const clearFetchCache = () => FETCH_CACHE.clear()
+
 /** GET with loading / error / reload. Pass null to skip. */
 export function useFetch<T = any>(url: string | null) {
-  const [data, setData] = useState<T | null>(null)
-  const [loading, setLoading] = useState(!!url)
+  const [data, setData] = useState<T | null>(() => (url && FETCH_CACHE.has(url) ? FETCH_CACHE.get(url) : null))
+  const [loading, setLoading] = useState(!!url && !(url && FETCH_CACHE.has(url)))
   const [error, setError] = useState<string | null>(null)
   const seq = useRef(0)
 
   const load = useCallback(async () => {
     if (!url) { setLoading(false); return }
     const my = ++seq.current
-    setLoading(true)
+    if (FETCH_CACHE.has(url)) setData(FETCH_CACHE.get(url))
+    else setLoading(true)
     try {
       const d = await api<T>(url)
+      FETCH_CACHE.set(url, d)
+      if (FETCH_CACHE.size > 60) FETCH_CACHE.delete(FETCH_CACHE.keys().next().value as string)
       if (my === seq.current) { setData(d); setError(null) }
     } catch (e: any) {
       if (my === seq.current) setError(e.message || 'Failed to load')

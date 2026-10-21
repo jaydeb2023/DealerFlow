@@ -101,13 +101,25 @@ export async function guard(roles?: DfRole[]): Promise<GuardResult> {
   catch (e: any) { return { ok: false, res: fail(`Server setup problem: ${e?.message || e}`, 500) } }
 }
 
+// Warm-instance cache: the same verified session token skips the auth round-trip and the
+// staff/company lookups for a few seconds (role or suspension changes apply within TTL).
+const GUARD_TTL_MS = 15000
+const guardCache = new Map<string, { at: number; user: any; staff: Staff; org: Org }>()
+
 async function guardInner(roles?: DfRole[]): Promise<GuardResult> {
   const authClient = createRouteClient()
-  const { data: { user } } = await authClient.auth.getUser()
-  if (!user) return { ok: false, res: fail('Please sign in.', 401) }
-
+  const { data: { session } } = await authClient.auth.getSession()   // reads the cookie, no network
+  const token = session?.access_token || ''
   const raw = createAdminClient()
-  let { data: staff, error: staffErr } = await raw.from('df_staff').select('*').eq('user_id', user.id).maybeSingle()
+
+  const hit = token ? guardCache.get(token) : undefined
+  if (hit && Date.now() - hit.at < GUARD_TTL_MS) {
+    return finish(hit.staff, hit.org, isSuperEmail(hit.user.email), raw, roles)
+  }
+
+  const { data: { user } } = await authClient.auth.getUser()         // verifies the token with Supabase
+  if (!user) return { ok: false, res: fail('Please sign in.', 401) }
+  let { data: staff, error: staffErr } = await raw.from('df_staff').select('*, df_orgs(id,name,slug,status,plan,trial_ends_at,max_users,max_dealers)').eq('user_id', user.id).maybeSingle()
   if (staffErr) return { ok: false, res: fail(`Database problem: ${staffErr.message}. Did you run supabase/migrations/001_dealerflow.sql in this Supabase project?`, 500) }
 
   if (!staff) {
@@ -138,7 +150,18 @@ async function guardInner(roles?: DfRole[]): Promise<GuardResult> {
     return { ok: false, res: fail('Your account is not linked to a company yet. Ask your company admin to add you, or create a company account.', 403, { code: 'NOT_STAFF', is_super: isSuper }) }
   }
 
-  const { data: org } = await raw.from('df_orgs').select('id,name,slug,status,plan,trial_ends_at,max_users,max_dealers').eq('id', staff.org_id).single()
+  let org: any = (staff as any).df_orgs
+  if (Array.isArray(org)) org = org[0]
+  if (!org) { const { data: o } = await raw.from('df_orgs').select('id,name,slug,status,plan,trial_ends_at,max_users,max_dealers').eq('id', staff.org_id).single(); org = o }
+  delete (staff as any).df_orgs
+  if (token) {
+    guardCache.set(token, { at: Date.now(), user, staff: staff as Staff, org: org as Org })
+    if (guardCache.size > 200) guardCache.delete(guardCache.keys().next().value as string)
+  }
+  return finish(staff as Staff, org as Org, isSuper, raw, roles)
+}
+
+function finish(staff: Staff, org: Org, isSuper: boolean, raw: RawDb, roles?: DfRole[]): GuardResult {
   if (!org) return { ok: false, res: fail('Company not found.', 403, { code: 'NOT_STAFF' }) }
   if (org.status === 'suspended') {
     return { ok: false, res: fail('This company account is suspended. Please contact Evynta.', 403, { code: 'ORG_SUSPENDED' }) }

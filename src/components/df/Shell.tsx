@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import * as Icons from 'lucide-react'
 import { Menu, X, LogOut, Bell, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
-import { api, ApiError } from '@/lib/df/client'
+import { api, ApiError, clearFetchCache } from '@/lib/df/client'
 import { NAV, ROLE_LABEL, defaultPath, canSee } from '@/lib/df/constants'
 import Logo from './Logo'
 import { OrgContext, StaffContext, type OrgMe, type StaffMe } from './Context'
@@ -55,7 +55,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   }, [me, pathname, router])
 
   useEffect(() => { setOpen(false) }, [pathname])
-  const signOut = async () => { await supabase.auth.signOut(); router.replace('/app/login') }
+  const signOut = async () => { clearFetchCache(); await supabase.auth.signOut(); router.replace('/app/login') }
   const onPlatform = pathname.startsWith('/app/platform')
 
   if (state === 'loading') return <div className="flex min-h-screen items-center justify-center"><Spinner className="h-8 w-8" /></div>
@@ -79,7 +79,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
   const sidebar = (
     <nav className="flex h-full flex-col bg-df-900 text-df-100">
-      <div className="px-5 py-5"><Logo light /></div>
+      <div className="px-5 py-5"><Logo light size={32} /></div>
       {org && <div className="mx-4 mb-2 truncate rounded-md bg-white/10 px-2.5 py-1.5 text-xs font-medium text-white">{me?.role === 'dealer' ? dealerName || org.name : org.name}</div>}
       <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
         {groups.map(g => (

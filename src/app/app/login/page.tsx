@@ -41,7 +41,7 @@ function Form() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-df-950 via-df-900 to-df-700 p-4">
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-2xl bg-white p-7 shadow-2xl">
         <div className="text-center">
-          <div className="flex justify-center"><Logo size={44} tagline /></div>
+          <div className="flex justify-center"><Logo size={48} tagline /></div>
           <div className="mt-1 text-[11px] uppercase tracking-[0.2em] text-gray-400">Dealer &amp; distributor management</div>
         </div>
         {mode === 'signup' && <Field label="Company name"><Input value={company} onChange={e => setCompany(e.target.value)} placeholder="Your company name" /></Field>}

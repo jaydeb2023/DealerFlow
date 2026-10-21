@@ -53,7 +53,7 @@ export default function Home() {
   return <div className="bg-white text-slate-800">
     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-        <Link href="/" className="flex items-center gap-3"><Image src="/evynta-logo-dark.png" alt="Evynta" width={96} height={30} className="hidden h-7 w-auto sm:block" /><span className="hidden h-6 w-px bg-slate-200 sm:block" /><Logo size={30} /></Link>
+        <Link href="/" className="flex items-center gap-3"><Image src="/evynta-logo-dark.png" alt="Evynta" width={96} height={30} className="hidden h-7 w-auto sm:block" /><span className="hidden h-6 w-px bg-slate-200 sm:block" /><Logo size={30} home={false} /></Link>
         <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex">{[['Features', '#features'], ['Industries', '#industries'], ['How it works', '#how'], ['Pricing', '#pricing'], ['Contact', '#demo']].map(([l, h]) => <a key={l} href={h} className="hover:text-df-700">{l}</a>)}</nav>
         <div className="flex items-center gap-2"><Link href="/app/login" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">Login</Link><a href="#demo" className="rounded-lg bg-df-700 px-4 py-2 text-sm font-semibold text-white hover:bg-df-800">Request a Demo</a></div>
       </div></header>
